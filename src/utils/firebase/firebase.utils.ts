@@ -7,7 +7,9 @@ import {
 	createUserWithEmailAndPassword,
 	signInWithEmailAndPassword,
 	signOut,
-	onAuthStateChanged
+	onAuthStateChanged,
+	NextOrObserver,
+	User,
 } from 'firebase/auth';
 
 import {
@@ -22,8 +24,11 @@ import {
 	increment,
 	collection, 
 	getDocs,
-	deleteDoc
+	deleteDoc,
+	QueryDocumentSnapshot
 } from 'firebase/firestore'
+
+import { Post } from '../../store/posts/posts.types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDAaNGtNG_53S0p9vGjJK4_Ttqb111o1jQ",
@@ -33,6 +38,7 @@ const firebaseConfig = {
   messagingSenderId: "578427641459",
   appId: "1:578427641459:web:8f1368315785cc00615406"
 };
+
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
@@ -47,10 +53,22 @@ export const auth = getAuth();
 export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
 export const db = getFirestore(firebaseApp);
 
+export type AdditionalInformation = {
+	displayName?: string;
+	role: string;
+}
+
+export type UserData = {
+	createdAt: Date;
+	displayName: string;
+	email: string;
+	role: string;
+}
+
 export const createUserDocumentFromAuth = async (
-	userAuth, 
-	additionalInformation = {}
-	) => {
+	userAuth: User, 
+	additionalInformation = {} as AdditionalInformation
+	): Promise<void | QueryDocumentSnapshot<UserData>> => {
 	if(!userAuth) return;
 	
 	const userDocRef = doc(db, 'users', userAuth.uid);	
@@ -68,24 +86,29 @@ export const createUserDocumentFromAuth = async (
 				...additionalInformation,
 			});
 		} catch (error) {
-			console.log('error creating the user', error.message);
+			console.log('error creating the user', error);
 		}
 	}
-	return userSnapshot;
+	return userSnapshot as QueryDocumentSnapshot<UserData>;
 }
 
-export const createAuthUserWithEmailAndPassword = async (email, password, additionalInformation) => {
+export const createAuthUserWithEmailAndPassword = async (
+	email: string, 
+	password: string, 
+	additionalInformation = {} as AdditionalInformation
+	) => {
 	if(!email || !password) return;
 	
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  user.displayName = additionalInformation.displayName
+  //user.displayName = additionalInformation.displayName
+  console.log(user)
   createUserDocumentFromAuth(user, additionalInformation);
   
   return user;
  
 }
 
-export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+export const signInAuthUserWithEmailAndPassword = async (email: string, password: string) => {
 	if(!email || !password) return;
 
 	return await signInWithEmailAndPassword(auth, email, password)
@@ -93,10 +116,10 @@ export const signInAuthUserWithEmailAndPassword = async (email, password) => {
 
 export const signOutUser = async () => await signOut(auth);
 
-export const onAuthStateChangedListener = (callback) => 
+export const onAuthStateChangedListener = (callback: NextOrObserver<User>) => 
 	onAuthStateChanged(auth, callback)
 
-export const fetchUser = async (userId) => {
+export const fetchUser = async (userId: string) => {
 	try {
         //Reference to the specific user document
         const userDocRef = doc(db, 'users', userId);
@@ -111,8 +134,7 @@ export const fetchUser = async (userId) => {
 }
 
 export const createPostDocument = async (
-	newPostData, 
-	additionalInformation = {}
+	newPostData: object, 
 	) => {
 	try {	
 		const postsCollectionRef = collection(db, 'posts');
@@ -121,14 +143,14 @@ export const createPostDocument = async (
 		const post = {
 			  id: postDoc.id,
 			  ...postDoc.data()
-		};
+		} as Post;
     return post;
 	} catch (error) {
 		console.error('Error adding post:', error);
 	} 	
 }
 
-export const editPostDocument = async (post) => {
+export const editPostDocument = async (post: Post) => {
 	try {
 
 		const postDocRef = doc(db, 'posts', post.id);
@@ -140,17 +162,16 @@ export const editPostDocument = async (post) => {
 	}	
 }
 
-export const fetchPosts = async () => {
+export const fetchPosts = async (): Promise<Post[]> => {
 
 	try {
     const postsCollectionRef = collection(db, 'posts'); // Reference to the 'posts' collection
 		const q = query(postsCollectionRef); // Construct a query
 		const querySnapshot = await getDocs(q); // Fetch all documents based on the constructed query 
     
-    const postData = querySnapshot.docs.map((doc) => ({    	
-      id: doc.id, // Document ID
-      ...doc.data(), // Document data
-    }));
+    const postData = querySnapshot.docs.map((doc) =>       
+      doc.data() as Post, // Document data
+    ) ;
     // Sort postData by createdAt field in descending order
     postData.sort((a, b) => b.createdAt - a.createdAt);
     return postData;
@@ -160,7 +181,7 @@ export const fetchPosts = async () => {
   }
 }
 
-export const fetchPost = async (postId) => {			
+export const fetchPost = async (postId: string) => {			
 	try {
         //Reference to the specific post document
         const postDocRef = doc(db, 'posts', postId);
@@ -175,7 +196,7 @@ export const fetchPost = async (postId) => {
     }
 }
 
-export const deletePost = async (postId) => {
+export const deletePost = async (postId: string) => {
 	try {
 		// Delete comments related to the post
     const commentsQuerySnapshot = await getDocs(query(collection(db, 'postComments'), where('postId', '==', postId)));
@@ -195,7 +216,12 @@ export const deletePost = async (postId) => {
     }	
 }
 
-export const fetchIfPostLiked = async (fields) => {
+type likeBtnFields = {
+	postId: string;
+	userId: string;
+}
+
+export const fetchIfPostLiked = async (fields: likeBtnFields): Promise<boolean> => {
 	try {
 
       const postLikesCollectionRef = collection(db, 'postLikes');
@@ -214,7 +240,7 @@ export const fetchIfPostLiked = async (fields) => {
   }
 }
 
-const postLikes = async (fields, liked) => {
+const postLikes = async (fields: likeBtnFields, liked: boolean) => {
 	try {
 		const postLikesCollectionRef = collection(db, 'postLikes');	
 		if (!liked) {
@@ -232,7 +258,7 @@ const postLikes = async (fields, liked) => {
 	}	 	
 }
 
-export const sumLike = async (postId, liked, fields) => {
+export const sumLike = async (postId:string, liked:boolean, fields: likeBtnFields) => {
     try {
         // Reference to the specific post document
         const postDocRef = doc(db, 'posts', postId);
@@ -251,19 +277,27 @@ export const sumLike = async (postId, liked, fields) => {
     }
 };
 
-export const saveComment = async (fields) => {
+type commentFields = {
+	id: string;
+	postId: string;
+	userId: string;
+	comment: string;
+	createdAt: number;
+}
+
+export const saveComment = async (fields: commentFields): Promise<string> => {
 	try {
 		
 		 const commentDocRef = collection(db, 'postComments');
 		 const newPostCommentRef = await addDoc(commentDocRef, fields);
-		 return newPostCommentRef;
+		 return newPostCommentRef.id;
 	}	catch (error) {
         console.error('Error saving comment:', error);
         throw error; // Re-throw the error to handle it in the calling code
     }
 }
 
-export const fetchComments = async (postId) => {
+export const fetchComments = async (postId: string): Promise<commentFields[]> => {
 
 	try {
     const commentsCollectionRef = collection(db, 'postComments');
@@ -275,7 +309,7 @@ export const fetchComments = async (postId) => {
     const commentData = querySnapshot.docs.map((doc) => ({    	
       id: doc.id, // Document ID
       ...doc.data(), // Document data
-    }));
+    } as commentFields));
 
     // Sort commentData by createdAt field in descending order
     commentData.sort((a, b) => b.createdAt - a.createdAt);
@@ -286,7 +320,7 @@ export const fetchComments = async (postId) => {
   }
 }
 
-export const getPostCommentsQuantity = async (postId) => {
+export const getPostCommentsQuantity = async (postId: string): Promise<number> => {
   try {
     // Reference to the comments collection for the specific post
     const commentsCollectionRef = collection(db, 'postComments');
@@ -303,7 +337,7 @@ export const getPostCommentsQuantity = async (postId) => {
   }
 };
 
-export const deletePostComment = async (commentId) => {
+export const deletePostComment = async (commentId: string) => {
 		try {			
       // Delete comment from Firestore database     
       await deleteDoc(doc(db, 'postComments', commentId));

@@ -47,9 +47,9 @@ const CommentsModal = ({ post, onCommentsQuantity }) => {
    
     try {
        const fields = { userId: currentUser.uid, postId: post.id, comment: newComment, createdAt };           
-       const newPostCommentRef = await saveComment(fields);       
+       const newPostId = await saveComment(fields);       
   	   // Update comments state with the newly added comment
-       setComments([ { id: newPostCommentRef.id, ...fields }, ...comments ]);
+       setComments([ { id: newPostId, ...fields }, ...comments ]);
   	   onCommentsQuantity(comments)
        resetFormFields();
     } catch (error){

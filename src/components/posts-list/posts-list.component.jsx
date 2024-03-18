@@ -16,7 +16,7 @@ const PostsList = () => {
   const posts = useSelector(selectPosts)  
   const loading = useSelector(selectPostsLoading) 
   const dispatch = useDispatch();
-  
+ 
   const postsPerPage = 12;
   const [currentPage, setCurrentPage] = useState(1);
   

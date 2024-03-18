@@ -1,5 +1,0 @@
-export const POSTS_ACTION_TYPES = {
-	SET_POSTS: "posts/SET_POSTS",
-	ADD_POST: "posts/ADD_POST",
-	UPDATE_POST: "posts/UPDATE_POST"
-}

@@ -1,6 +1,8 @@
 import { createSelector } from 'reselect';
+import { PostsState } from './posts.reducer';
+import { RootState } from '../store';
 
-const selectPostsReducer = (state) => state.posts;
+const selectPostsReducer = (state: RootState): PostsState => state.posts;
 
 export const selectPosts = createSelector(
   [selectPostsReducer],
