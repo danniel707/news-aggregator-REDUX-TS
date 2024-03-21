@@ -6,13 +6,13 @@ import { selectCurrentUser, selectUserData } from '../../store/user/user.selecto
 
 import { signOutUser } from '../../utils/firebase/firebase.utils';
 
-import './navigation.styles.css'
+import './navigation.styles.scss'
 
 const Navigation = () => {
   
   const currentUser = useSelector(selectCurrentUser)
   const userData = useSelector(selectUserData)
- 
+
   return (
     <Fragment>
       <div className="navigation-container">

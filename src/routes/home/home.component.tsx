@@ -8,6 +8,7 @@ import { selectCurrentUser, selectUserData } from '../../store/user/user.selecto
 
 
 const Home = () => {    
+  //Key for left and right column.
   const stockdioKey = process.env.REACT_APP_STOCKDIO_API_KEY;    
   const currentUser = useSelector(selectCurrentUser)
   const userData = useSelector(selectUserData)

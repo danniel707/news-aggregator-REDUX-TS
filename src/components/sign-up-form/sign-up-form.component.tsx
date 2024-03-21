@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
+import { AuthError, AuthErrorCodes } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux'
 
 import FormInput from '../form-input/form-input.component'
 import Button from '../button/button.component'
+
+import { setSignUpLoading } from '../../store/user/user.action';
 
 import './sign-up-form.styles.scss'
 
@@ -21,35 +25,38 @@ const defaultFormFields = {
 const SignUpForm = () => {
 	const [formFields, setFormFields] = useState(defaultFormFields);
 	const { displayName, email, password, confirmPassword } = formFields;
-
+	const dispatch = useDispatch();
 	const navigate = useNavigate(); // Initialize useHistory hook
 
 	const resetFormFields = () => {
 		setFormFields(defaultFormFields);
 	}
 
-	const handleSubmit = async (event) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
 		if(password !== confirmPassword){
 			alert("passwords do not match");
 			return;
 		}
-	
+		
 		try {
-			const { user } = await createAuthUserWithEmailAndPassword(
-				email, 
+			const result  = await createAuthUserWithEmailAndPassword(email, 
 				password,	
 				{ displayName, role: 'visitor' }								
 			);
-		
-			await createUserDocumentFromAuth(user,{ displayName });		
-			resetFormFields();
-			
-			navigate('/');	
-
+		   	dispatch(setSignUpLoading(true))
+		    if (result?.user) {		        
+		    	const { user } = result;
+				await createUserDocumentFromAuth(user, { displayName, role: 'visitor' });		
+				
+				resetFormFields();
+				dispatch(setSignUpLoading(false))
+				navigate("/")				
+		    }
+				
 		} catch (error){
-			if(error.code === 'auth/email-already-in-use') {
+			if((error as AuthError).code === AuthErrorCodes.EMAIL_EXISTS) {
 				alert('Cannot create user, email already in use');
 			} else {
 				console.log('user creation encountered an error', error);
@@ -57,7 +64,7 @@ const SignUpForm = () => {
 		}
 	}
 
-	const handleChange = (event) => {
+	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const {name, value} = event.target;
 
 		setFormFields({...formFields, [name]: value})
@@ -102,7 +109,9 @@ const SignUpForm = () => {
 					name="confirmPassword" 
 					value={confirmPassword}
 				/>
-				<Button type="submit">Sign Up</Button>
+				<div className="btn-container">
+					<Button buttonType="base" type="submit">Sign Up</Button>
+				</div>
 			</form>
 		</div>
 	)

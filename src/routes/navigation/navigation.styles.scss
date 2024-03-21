@@ -39,24 +39,27 @@
   border: 2px solid var(--second-color);
   border-radius: 15px;
   background-color: white;
+  transition: border-color 0.3s, color 0.3s;
+
+  &:hover {
+    border: 2px solid var(--second-hover);
+    color: #00BC2F;
+  }
 }
 
-.nav-right-side:hover {
-  border: 2px solid var(--second-hover);
-  color: #00BC2F;
-}
 
 .name-sign-out-container {
   display: flex; 
   align-items: center;  
-}
 
-.name-sign-out-container p {
-  background-color: white;
-  padding: 0.4em 0.6em;
-  color: var(--second-color);
-  border-radius: 15px;  
-  margin-right: 0em;
+
+  p {
+    background-color: white;
+    padding: 0.4em 0.6em;
+    color: var(--second-color);
+    border-radius: 15px;  
+    margin-right: 0em;
+  }
 }
 
 .sign-out {

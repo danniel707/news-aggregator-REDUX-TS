@@ -15,3 +15,8 @@ export const selectUserData = createSelector(
 	selectUserReducer,
 	(userSlice) => userSlice.userData
 )
+
+export const selectUserLoading = createSelector(
+  [selectUserReducer],
+  (userSlice) => userSlice.isLoading
+);

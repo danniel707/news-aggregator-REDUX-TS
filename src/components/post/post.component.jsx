@@ -55,7 +55,7 @@ const Post = ({ post, onPostDelete }) => {
 	const webSource = webSite ? webSite.replace('www.', '') : '';
 	const date = post.createdAt		
 	const hoursAgo = (formatDistanceToNow(date.toDate())).replace('about', '') + ' ago'
-
+	
 	return (
 		<div className="post-container">			
 			<div className="post-content">

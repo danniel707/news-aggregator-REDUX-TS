@@ -2,19 +2,21 @@ import { AnyAction } from 'redux';
 
 import { USER_ACTION_TYPES } from './user.types'
 
-import { setCurrentUser, setUserData } from './user.action'
+import { setCurrentUser, setUserData, setSignUpLoading } from './user.action'
 
 import { UserData } from '../../utils/firebase/firebase.utils'
 
 export type UserState = {
 	readonly currentUser: UserData | null;
 	readonly userData: UserData | null;
+	readonly isLoading: boolean;
 	readonly error: Error | null;
 }
 
 const INITIAL_STATE = {
 	currentUser: null,
 	userData: null,
+	isLoading: false,
 	error: null
 }
 
@@ -32,6 +34,12 @@ export const userReducer = (
 		return {
 			...state,
 			userData: action.payload
+		}	
+	}
+	if(setSignUpLoading.match(action)){
+		return {
+			...state,
+			isLoading: action.payload
 		}	
 	}
 	return state;

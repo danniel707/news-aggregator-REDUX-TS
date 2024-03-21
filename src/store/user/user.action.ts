@@ -6,9 +6,14 @@ export type SetCurrentUser = ActionWithPayload<USER_ACTION_TYPES.SET_CURRENT_USE
 
 export type SetUserData = ActionWithPayload<USER_ACTION_TYPES.SET_USER_DATA, UserData>;
 
+export type SetSignUpLoading = ActionWithPayload<USER_ACTION_TYPES.SET_SIGN_UP_LOADING, boolean>;
+
 export const setCurrentUser = withMatcher((user: UserData): SetCurrentUser => 
 	createAction(USER_ACTION_TYPES.SET_CURRENT_USER, user));
 
 export const setUserData = withMatcher((userData: UserData): SetUserData => 
 	createAction(USER_ACTION_TYPES.SET_USER_DATA, userData));
+
+export const setSignUpLoading = withMatcher((isLoading: boolean): SetSignUpLoading => 
+	createAction(USER_ACTION_TYPES.SET_SIGN_UP_LOADING, isLoading));
 

@@ -9,6 +9,5 @@ export type Post = {
 	title: string;
 	url: string;
 	description: string;
-	createdAt: number;
-	likes: number;
+	createdAt: number;	
 }

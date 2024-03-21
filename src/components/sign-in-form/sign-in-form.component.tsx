@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, FC, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux'
 
 import FormInput from '../form-input/form-input.component'
-import Button from '../button/button.component';
+import Button, { BUTTON_TYPE_CLASSES } from '../button/button.component';
+import { setSignUpLoading } from '../../store/user/user.action';
 
 import './sign-in-form.styles.scss'
 
@@ -10,6 +12,11 @@ import {
 	signInWithGooglePopup, 	
 	signInAuthUserWithEmailAndPassword
 } from '../../utils/firebase/firebase.utils'
+
+type FormFields = {
+  email: string;
+  password: string;
+};
 
 const defaultFormFields = {	
 	email: '',
@@ -19,8 +26,8 @@ const defaultFormFields = {
 const SignInForm = () => {
 	const [formFields, setFormFields] = useState(defaultFormFields);
 	const { email, password } = formFields;
-
-	const navigate = useNavigate(); // Initialize useHistory hook
+	const dispatch = useDispatch();
+	const navigate = useNavigate(); 
 
 	const resetFormFields = () => {
 		setFormFields(defaultFormFields);
@@ -32,47 +39,39 @@ const SignInForm = () => {
 			// Redirect to the desired page after successful sign-in
 			navigate('/');	
 			
-		} catch (error) {
-			switch (error.code) {
-				case 'auth/popup-closed-by-user':
-					
-					break;
-				default:
-					console.log(error);
-			}
+		} catch (error){
+			console.log('user sign in with google failed', error);
+						
 		}		
 	};
 
-	const handleSubmit = async (event) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		
+		try {			
+			const userCredential = await signInAuthUserWithEmailAndPassword(email, password);
+			dispatch(setSignUpLoading(true))
+		    const user = userCredential?.user;
+		    
+		    if (user) {
+		        resetFormFields();
+		        // Redirect to the desired page after successful sign-in		       
+		        dispatch(setSignUpLoading(false))
+		        navigate('/');
+		    }
 
-		try {
-			const {user} = await signInAuthUserWithEmailAndPassword(
-				email, 
-				password
-			);
-			
-			resetFormFields();
-			// Redirect to the desired page after successful sign-in
-			navigate('/');
-
-		} catch (error){
-			switch (error.code) {
-				case 'auth/invalid-credential':
-					alert("Incorrect password or email")
-					break;				
-				default:
-					console.log(error);
-			}			
+		} catch (error){			
+			console.log('user sign in failed', error);			
+			alert("Incorrect password or email")			
 		}
 	}
 
-	const handleChange = (event) => {
+	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const {name, value} = event.target;
 
 		setFormFields({...formFields, [name]: value})
 	};
-
+	
 	return (
 		<div className='sign-up-container'>
 			<h2>Already have an account?</h2>
@@ -96,8 +95,12 @@ const SignInForm = () => {
 					value={password}
 				/>
 				<div className="buttons-container">
-					<Button type="submit">Sign In</Button>
-					<Button type='button' buttonType="google" onClick={signInWithGoogle}>Google Sign In</Button>				
+					<Button buttonType='base' type="submit">Sign In</Button>
+					<Button 
+						type='button' 
+						buttonType='google'
+						onClick={signInWithGoogle}
+						>Google Sign In</Button>				
 				</div>
 			</form>
 		</div>

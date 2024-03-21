@@ -10,6 +10,8 @@ import {
 	onAuthStateChanged,
 	NextOrObserver,
 	User,
+	updateProfile,
+	UserCredential
 } from 'firebase/auth';
 
 import {
@@ -75,7 +77,7 @@ export const createUserDocumentFromAuth = async (
 	const userSnapshot = await getDoc(userDocRef);
 	
 	if(!userSnapshot.exists()){
-		const { displayName, email } = userAuth;		
+		const {displayName, email } = userAuth;		
 		const createdAt = new Date();
 		
 		try{
@@ -96,17 +98,20 @@ export const createAuthUserWithEmailAndPassword = async (
 	email: string, 
 	password: string, 
 	additionalInformation = {} as AdditionalInformation
-	) => {
-	if(!email || !password) return;
-	
-  const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  //user.displayName = additionalInformation.displayName
-  console.log(user)
-  createUserDocumentFromAuth(user, additionalInformation);
-  
-  return user;
- 
-}
+	): Promise<UserCredential | null> => {
+	  if (!email || !password) return null;
+
+	  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+	  const { user } = userCredential;
+
+	  if (user && additionalInformation.displayName) {
+	    await updateProfile(user, {
+	      displayName: additionalInformation.displayName
+	    });
+	  }
+
+	  return userCredential;
+	};
 
 export const signInAuthUserWithEmailAndPassword = async (email: string, password: string) => {
 	if(!email || !password) return;
@@ -169,9 +174,10 @@ export const fetchPosts = async (): Promise<Post[]> => {
 		const q = query(postsCollectionRef); // Construct a query
 		const querySnapshot = await getDocs(q); // Fetch all documents based on the constructed query 
     
-    const postData = querySnapshot.docs.map((doc) =>       
-      doc.data() as Post, // Document data
-    ) ;
+    const postData = querySnapshot.docs.map((doc) =>({
+    	...doc.data() as Post,
+    	id: doc.id	
+    })) ;
     // Sort postData by createdAt field in descending order
     postData.sort((a, b) => b.createdAt - a.createdAt);
     return postData;
@@ -240,12 +246,30 @@ export const fetchIfPostLiked = async (fields: likeBtnFields): Promise<boolean> 
   }
 }
 
+export const getPostLikesQuantity = async (postId: string): Promise<number> => {
+  try {
+    // Reference to the likes collection for the specific post
+    const likesCollectionRef = collection(db, 'postLikes');
+    const postLikesQuery = query(likesCollectionRef, where('postId', '==', postId));
+
+    // Fetch all likes documents for the specified post ID
+    const querySnapshot = await getDocs(postLikesQuery);
+   
+    // Return the number of likes
+    return querySnapshot.size;
+  } catch (error) {
+    console.error('Error getting post likes quantity:', error);
+    throw error; // Re-throw the error to handle it in the calling code
+  }
+};
+
 const postLikes = async (fields: likeBtnFields, liked: boolean) => {
 	try {
+
 		const postLikesCollectionRef = collection(db, 'postLikes');	
 		if (!liked) {
 				await addDoc(postLikesCollectionRef, fields);	
-		}	else {
+		}	else {				
 				const postLikeQuery = query(postLikesCollectionRef, where('postId', '==', fields.postId), where('userId', '==', fields.userId));
 				const postLikeDocs = await getDocs(postLikeQuery);
      			postLikeDocs.forEach(doc => {
@@ -253,24 +277,21 @@ const postLikes = async (fields: likeBtnFields, liked: boolean) => {
       	});     
 		}	
 	} catch (error) {
-		console.log('Error at postLikes');
+		console.log('Error at postLikes', error);
 		throw error; 
 	}	 	
 }
 
-export const sumLike = async (postId:string, liked:boolean, fields: likeBtnFields) => {
+export const sumLike = async (liked:boolean, fields: likeBtnFields) => {
     try {
+    	 	
         // Reference to the specific post document
-        const postDocRef = doc(db, 'posts', postId);
-
-        // Construct the update object based on the liked variable
-				const updateObject = liked ? { likes: increment(-1) } : { likes: increment(1) };
-
-				// Update the document with the new like count
-				await updateDoc(postDocRef, updateObject);        
-       	
+        const postDocRef = doc(db, 'posts', fields.postId);							
        	postLikes(fields, liked)//Acumulate the users likes per post
-        
+     		
+     		const likes = await getPostLikesQuantity(fields.postId)	
+     		// Update the document with the new like count			      
+       	await updateDoc(postDocRef, {likes});     
     } catch (error) {
         console.error('Error updating likes:', error);
         throw error; // Re-throw the error to handle it in the calling code
