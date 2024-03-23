@@ -4,13 +4,13 @@ import Footer from '../../components/footer/footer.component';
 import Spinner from '../../components/spinner/spinner.component'
 
 import { selectUserLoading } from '../../store/user/user.selector'
-
+import { FC } from 'react'
 import { useSelector } from 'react-redux'
 
 import './authentication.styles.scss'
 
-const Authentication = () => {
-	const loading = useSelector(selectUserLoading) 
+const Authentication: FC = () => {
+	const loading: boolean = useSelector(selectUserLoading) 
  
 	return (
 		<div>

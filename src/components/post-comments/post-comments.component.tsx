@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 
 import { getPostCommentsQuantity } from '../../utils/firebase/firebase.utils'
+import { Post as PostType } from '../../store/posts/posts.types';
 
 import CommentsModal from '../comments-modal/comments-modal.component'
 import Modal from 'react-modal';
@@ -10,12 +11,12 @@ import './post-comments.styles.scss'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faComments } from '@fortawesome/free-solid-svg-icons';
 
-const PostComments = ({post}) => {
+const PostComments: FC<{post: PostType}> = ({post}) => {
 
-	const [commentsQuantity, setCommentsQuantity] = useState(null);
+	const [commentsQuantity, setCommentsQuantity] = useState<number | null>(null);
 
-	const handleCommentsQuantity = (comments) => {
-    	setCommentsQuantity(comments.length); // Update comments quantity in parent
+	const handleCommentsQuantity = (quantity: number) => {
+    	setCommentsQuantity(quantity); // Update comments quantity in parent
   	};
 
   	useEffect(() => {
@@ -28,7 +29,7 @@ const PostComments = ({post}) => {
       		}
     	};
     	fetchCommentsQuantity();
- 	}, [post.id, handleCommentsQuantity])//The effect will be triggered whenever the value of postId changes.
+ 	}, [post.id])//The effect will be triggered whenever the value of postId changes.
 
 	const [isPostCommentsModalOpen, setIsPostCommentsModalOpen] = useState(false);
 	

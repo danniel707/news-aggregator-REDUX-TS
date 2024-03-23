@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, FC } from 'react';
+import {Timestamp} from 'firebase/firestore';
 import { useSelector } from 'react-redux'
 import { selectCurrentUser, selectUserData } from '../../store/user/user.selector'
 
@@ -8,6 +8,7 @@ import EditPostModal from '../edit-post-modal.component';
 import Button from '../button/button.component'
 import LikeButton from '../like-button/like-button.component';
 
+import { Post as PostType } from '../../store/posts/posts.types'
 import { deletePost } from '../../utils/firebase/firebase.utils'
 
 import Modal from 'react-modal';
@@ -19,7 +20,12 @@ import { faEdit } from '@fortawesome/free-solid-svg-icons';
 
 import { formatDistanceToNow } from 'date-fns';
 
-const Post = ({ post, onPostDelete }) => {
+type Props = {
+	post: PostType;
+	onPostDelete: (postId: string) => void;
+}
+
+const Post: FC<Props> = ({ post, onPostDelete }) => {
   
 	const currentUser = useSelector(selectCurrentUser)
   	const userData = useSelector(selectUserData)	
@@ -51,11 +57,23 @@ const Post = ({ post, onPostDelete }) => {
 	    }
 	}
 
-	const webSite = post.url ? post.url.split('https://').pop().split('/')[0] : '';
+	const webSite = post.url ? post.url.split('https://').pop()?.split('/')[0] : '';
 	const webSource = webSite ? webSite.replace('www.', '') : '';
-	const date = post.createdAt		
-	const hoursAgo = (formatDistanceToNow(date.toDate())).replace('about', '') + ' ago'
 	
+	let date: Date;
+	// Check if post.createdAt is a number or a Timestamp
+	if (typeof post.createdAt === 'number') {
+	    // If it's a number, convert it to a Timestamp first
+	    const timestamp = Timestamp.fromMillis(post.createdAt);
+	    date = timestamp.toDate();
+	} else {
+    // Assuming it's a Timestamp
+	    const timestamp = post.createdAt as Timestamp;
+	    date = timestamp.toDate();
+	}
+	
+	const hoursAgo = (formatDistanceToNow(date)).replace('about', '') + ' ago'
+
 	return (
 		<div className="post-container">			
 			<div className="post-content">

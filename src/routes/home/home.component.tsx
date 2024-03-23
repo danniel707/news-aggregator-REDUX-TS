@@ -2,14 +2,14 @@ import CreatePostButton from '../../components/create-post-button/create-post-bu
 import Columns from '../../components/columns/columns.component';
 import ScrollTopButton from '../../components/scroll-top-button/scroll-top-button.component';
 import Footer from '../../components/footer/footer.component';
-
+import { FC } from 'react'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser, selectUserData } from '../../store/user/user.selector'
 
 
-const Home = () => {    
+const Home: FC = () => {    
   //Key for left and right column.
-  const stockdioKey = process.env.REACT_APP_STOCKDIO_API_KEY;    
+  const stockdioKey: string = process.env.REACT_APP_STOCKDIO_API_KEY!;//"!" Non null assertion    
   const currentUser = useSelector(selectCurrentUser)
   const userData = useSelector(selectUserData)
   

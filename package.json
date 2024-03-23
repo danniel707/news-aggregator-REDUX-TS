@@ -60,6 +60,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-modal": "^3.16.3",
     "@types/redux-logger": "^3.0.13"
   }
 }

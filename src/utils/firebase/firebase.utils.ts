@@ -61,6 +61,7 @@ export type AdditionalInformation = {
 }
 
 export type UserData = {
+	uid: string;
 	createdAt: Date;
 	displayName: string;
 	email: string;
@@ -142,6 +143,7 @@ export const createPostDocument = async (
 	newPostData: object, 
 	) => {
 	try {	
+		console.log(newPostData)
 		const postsCollectionRef = collection(db, 'posts');
 		const postDocRef = await addDoc(postsCollectionRef, newPostData); 
 		const postDoc = await getDoc(postDocRef); 
@@ -288,17 +290,14 @@ export const sumLike = async (liked:boolean, fields: likeBtnFields) => {
         // Reference to the specific post document
         const postDocRef = doc(db, 'posts', fields.postId);							
        	postLikes(fields, liked)//Acumulate the users likes per post
-     		
-     		const likes = await getPostLikesQuantity(fields.postId)	
-     		// Update the document with the new like count			      
-       	await updateDoc(postDocRef, {likes});     
+     		    
     } catch (error) {
         console.error('Error updating likes:', error);
         throw error; // Re-throw the error to handle it in the calling code
     }
 };
 
-type commentFields = {
+export type CommentFields = {
 	id: string;
 	postId: string;
 	userId: string;
@@ -306,19 +305,24 @@ type commentFields = {
 	createdAt: number;
 }
 
-export const saveComment = async (fields: commentFields): Promise<string> => {
+export const saveComment = async (fields: object): Promise<CommentFields> => {
 	try {
 		
 		 const commentDocRef = collection(db, 'postComments');
 		 const newPostCommentRef = await addDoc(commentDocRef, fields);
-		 return newPostCommentRef.id;
+		 const commentDoc = await getDoc(newPostCommentRef); 
+		 const comment = {
+			  id: commentDoc.id,
+			  ...commentDoc.data()
+		 } as CommentFields;
+     return comment;
 	}	catch (error) {
         console.error('Error saving comment:', error);
         throw error; // Re-throw the error to handle it in the calling code
     }
 }
 
-export const fetchComments = async (postId: string): Promise<commentFields[]> => {
+export const fetchComments = async (postId: string): Promise<CommentFields[]> => {
 
 	try {
     const commentsCollectionRef = collection(db, 'postComments');
@@ -330,7 +334,7 @@ export const fetchComments = async (postId: string): Promise<commentFields[]> =>
     const commentData = querySnapshot.docs.map((doc) => ({    	
       id: doc.id, // Document ID
       ...doc.data(), // Document data
-    } as commentFields));
+    } as CommentFields));
 
     // Sort commentData by createdAt field in descending order
     commentData.sort((a, b) => b.createdAt - a.createdAt);

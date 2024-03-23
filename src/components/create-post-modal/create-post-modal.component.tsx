@@ -1,9 +1,10 @@
-import React, { useState  } from 'react';
+import { useState, FC, ChangeEvent, FormEvent  } from 'react';
 import { useDispatch } from 'react-redux'
 
 import Button from '../button/button.component'
 
 import { addPost } from '../../store/posts/posts.action';
+import { Post } from '../../store/posts/posts.types';
 
 import FormInput from '../form-input/form-input.component'
 
@@ -12,40 +13,44 @@ import { createPostDocument
 
 import './create-post-modal.styles.scss'
 
+type Props = {
+  onPostCreate: (post: Post) => void;
+}
 
-const defaultFormFields = {
+const defaultFormFields: Omit<Post, 'id'> = {
   title: '',
   url: '',
   description: '',
-  createdAt: new Date(), 
-  likes: 0, 
+  createdAt: Date.now(),  
 }
 
-const CreatePostModal = ({ onPostCreate }) => {
-  const [formFields, setFormFields] = useState(defaultFormFields);
-  const { title, url, likes, description, createdAt } = formFields;
+const CreatePostModal: FC<Props> = ({ onPostCreate }) => {
+  const [formFields, setFormFields] = useState<Omit<Post, 'id'>>(defaultFormFields);
+  const { title, url, description, createdAt } = formFields;
   const dispatch = useDispatch();
 
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
   }
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     try {
-       const newPostData = { title, url, description, createdAt, likes };        
-       const newPost = await createPostDocument(newPostData);       
+       const newPostData: Omit<Post, 'id'> = { title, url, description, createdAt };        
+       const newPost: Post | undefined = await createPostDocument(newPostData);       
        
-       dispatch(addPost(newPost));
-       onPostCreate(newPost); // Pass the new post to the parent component
+       if ( newPost ) {
+         dispatch(addPost(newPost));
+         onPostCreate(newPost); // Pass the new post to the parent component
+       }
        resetFormFields();   
     } catch (error){
       console.error('Error adding post:', error);    
     }
   }
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const {name, value} = event.target;
 
     setFormFields({...formFields, [name]: value})

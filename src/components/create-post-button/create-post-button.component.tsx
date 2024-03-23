@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FC, Dispatch } from 'react';
 
 import CreatePostModal from '../create-post-modal/create-post-modal.component';
-
+import { Post } from '../../store/posts/posts.types';
 import Button from '../button/button.component'
 import Modal from 'react-modal';
 
 import './create-post-button.styles.scss'
 
 
-const CreatePostButton = () => {
+const CreatePostButton: FC = () => {
   
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const [newPost, setNewPost] = useState(null); // State to track the newly created post
-  
-  const handlePostCreate = async (newPost) => {   
+  const [newPost, setNewPost] = useState<Post | null>(null);
+
+  // Update the type of setNewPost to accept either a Post or null
+  const setNewPostState: Dispatch<Post | null> = setNewPost; 
+
+  const handlePostCreate = async (newPost: Post) => {   
     try {      
       // Update the posts state with the new post data
-      setNewPost(newPost);//From here is the HTML variable        
+      setNewPostState(newPost);//From here is the HTML variable        
     } catch (error) {
         console.error('Error fetching post document:', error);
     }     

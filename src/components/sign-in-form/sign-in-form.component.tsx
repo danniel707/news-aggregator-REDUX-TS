@@ -1,10 +1,8 @@
 import { useState, FC, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux'
 
 import FormInput from '../form-input/form-input.component'
 import Button, { BUTTON_TYPE_CLASSES } from '../button/button.component';
-import { setSignUpLoading } from '../../store/user/user.action';
 
 import './sign-in-form.styles.scss'
 
@@ -23,10 +21,10 @@ const defaultFormFields = {
 	password: '',
 }
 
-const SignInForm = () => {
+const SignInForm: FC = () => {
 	const [formFields, setFormFields] = useState(defaultFormFields);
 	const { email, password } = formFields;
-	const dispatch = useDispatch();
+
 	const navigate = useNavigate(); 
 
 	const resetFormFields = () => {
@@ -50,13 +48,11 @@ const SignInForm = () => {
 		
 		try {			
 			const userCredential = await signInAuthUserWithEmailAndPassword(email, password);
-			dispatch(setSignUpLoading(true))
-		    const user = userCredential?.user;
+			const user = userCredential?.user;
 		    
 		    if (user) {
 		        resetFormFields();
 		        // Redirect to the desired page after successful sign-in		       
-		        dispatch(setSignUpLoading(false))
 		        navigate('/');
 		    }
 

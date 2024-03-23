@@ -2,12 +2,12 @@ import { FC, TextareaHTMLAttributes, InputHTMLAttributes } from 'react';
 
 import './form-input.styles.scss'
 
-type FormInputProps = {
+type Props = {
   label: string;
   type: 'textarea' | 'text' | 'password' | 'email';
 } & ( | TextareaHTMLAttributes<HTMLTextAreaElement> | InputHTMLAttributes<HTMLInputElement>);
 
-const FormInput: FC<FormInputProps> = ({ label, type, ...otherProps }) => {
+const FormInput: FC<Props> = ({ label, type, ...otherProps }) => {
   if (type === 'textarea') {
     return (
       <div className="form">

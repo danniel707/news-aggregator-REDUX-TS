@@ -13,11 +13,11 @@ export enum BUTTON_TYPE_CLASSES {
 }
 
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   buttonType: keyof typeof BUTTON_TYPE_CLASSES;
 };
 
-const Button: FC<ButtonProps> = ({ children, buttonType, ...otherProps }) => {
+const Button: FC<Props> = ({ children, buttonType, ...otherProps }) => {
 
 	return (
 		<button 

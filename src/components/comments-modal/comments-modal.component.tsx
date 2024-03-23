@@ -1,9 +1,10 @@
-import React, { useState, useEffect  } from 'react';
+import { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react';
 import { useSelector } from 'react-redux'
 
 import { selectCurrentUser } from '../../store/user/user.selector'
+import { Post } from '../../store/posts/posts.types';
 
-import { saveComment, fetchComments } from '../../utils/firebase/firebase.utils'
+import { saveComment, fetchComments, CommentFields } from '../../utils/firebase/firebase.utils'
 
 import Button from '../button/button.component'
 import CommentsList from '../comments-list/comments-list.component'
@@ -12,20 +13,27 @@ import FormInput from '../form-input/form-input.component'
 
 import './comments-modal.styles.scss'
 
-const defaultFormFields = {
-	newComment: '',
-	createdAt: new Date(),   
+type Props = {
+  post: Post;
+  onCommentsQuantity: (length: number) => void; 
 }
 
-const CommentsModal = ({ post, onCommentsQuantity }) => {
-  const [formFields, setFormFields] = useState(defaultFormFields);
-  const { newComment, createdAt } = formFields;
+const defaultFormFields: Omit<CommentFields, 'id'> = {
+  postId: '',
+  userId: '',
+	comment: '',
+	createdAt: Date.now(),   
+}
+
+const CommentsModal: FC<Props> = ({ post, onCommentsQuantity }) => {
+  const [formFields, setFormFields] = useState<Omit<CommentFields, 'id'>>(defaultFormFields);
+  const { comment, createdAt } = formFields;
   const currentUser = useSelector(selectCurrentUser)
-  const [ comments, setComments ] = useState([]);
+  const [ comments, setComments ] = useState<CommentFields[]>([]);
 
   useEffect(() => {
     const fetchCommentsData = async () => {
-      const commentsData = post.id ? await fetchComments(post.id) : [];      
+      const commentsData: CommentFields[] = post.id ? await fetchComments(post.id) : [];      
       setComments(commentsData);
     };
     fetchCommentsData();
@@ -42,30 +50,29 @@ const CommentsModal = ({ post, onCommentsQuantity }) => {
     }   
   }
  
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
    
     try {
-       const fields = { userId: currentUser.uid, postId: post.id, comment: newComment, createdAt };           
-       const newPostId = await saveComment(fields);       
+       const fields:  Omit<CommentFields, 'id'> = { userId: currentUser?.uid ?? '', postId: post.id, comment: comment, createdAt: createdAt };           
+       const newComment = await saveComment(fields);       
   	   // Update comments state with the newly added comment
-       setComments([ { id: newPostId, ...fields }, ...comments ]);
-  	   onCommentsQuantity(comments)
+       setComments(prevComments => [newComment, ...prevComments]);      
+  	   onCommentsQuantity(comments.length+1)
        resetFormFields();
     } catch (error){
       console.error('Error adding post:', error);    
     }
   }
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const {name, value} = event.target;
 
     setFormFields({...formFields, [name]: value})
   };
 
-  const handleCommentsQuantity = (updatedComments) => {
-    onCommentsQuantity(updatedComments)
-    setComments(updatedComments)
+  const handleCommentsQuantity = (quantity: number) => {
+    onCommentsQuantity(quantity)    
   }
 
   return (
@@ -73,14 +80,14 @@ const CommentsModal = ({ post, onCommentsQuantity }) => {
       <h2>{post.title}</h2>      
       <form onSubmit={handleSubmit}>        
         <FormInput 
-          label=''
+          label='Comment'
           type='textarea' 
           required 
           onClick={handleClick} 
           placeholder='Write a comment...'
           onChange={handleChange} 
-          name="newComment" 
-          value={newComment}
+          name="comment" 
+          value={comment}
         />     
         <div className="comment-button-container"> 
         	{currentUser ? (
@@ -89,11 +96,10 @@ const CommentsModal = ({ post, onCommentsQuantity }) => {
             <Button buttonType="sendComment" type="submit" disabled>Comment</Button>
           )}      	</div>
       </form>
-      	<CommentsList 
-          post={post} 
+      	<CommentsList            
           currentUser={currentUser} 
           comments={comments}
-          onCommentQuantity={handleCommentsQuantity}         
+          onCommentsQuantity={handleCommentsQuantity}         
           />
       
     </div>

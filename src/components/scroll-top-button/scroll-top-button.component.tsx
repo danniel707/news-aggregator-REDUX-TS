@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FC } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 import './scroll-top-button.styles.scss'
 
-const ScrollTopButton = () => {
+const ScrollTopButton: FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   // Show or hide the button based on scroll position
@@ -20,7 +20,6 @@ const ScrollTopButton = () => {
   // Attach event listener on mount
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-
     // Clean up the event listener on unmount
     return () => {
       window.removeEventListener('scroll', handleScroll);

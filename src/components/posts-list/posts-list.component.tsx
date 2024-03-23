@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FC } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -11,7 +11,7 @@ import Spinner from '../spinner/spinner.component'
 import './posts-list.styles.scss'
 
 
-const PostsList = () => {
+const PostsList: FC = () => {
 
   const posts = useSelector(selectPosts)  
   const loading = useSelector(selectPostsLoading) 
@@ -25,7 +25,7 @@ const PostsList = () => {
   const currentPosts = posts.slice(startIndex, endIndex);
   const totalPages = Math.ceil(posts.length / postsPerPage);
   
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     // Scroll to the top of the page
     window.scrollTo({
       top: 0,
@@ -35,7 +35,7 @@ const PostsList = () => {
     setCurrentPage(newPage);                    
   };    
  
-  const handlePostDelete = async (postId) => {
+  const handlePostDelete = async (postId: string) => {
    // Filter out the post with the given postId from the state
     const updatedPosts = posts.filter(post => post.id !== postId);
     

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, FC } from 'react';
 import { useDispatch } from 'react-redux'
 
 import { fetchPosts } from '../../utils/firebase/firebase.utils';
@@ -9,8 +9,11 @@ import { setPosts } from '../../store/posts/posts.action';
 
 import './columns.styles.scss'
 
+type Props = {
+  stockdioKey: string;
+}
 
-const Columns = ({ stockdioKey }) => {
+const Columns: FC<Props> = ({ stockdioKey }) => {
 
   const dispatch = useDispatch();
  

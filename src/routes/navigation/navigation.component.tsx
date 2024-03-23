@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, FC } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 
 import { useSelector } from 'react-redux'
@@ -8,7 +8,7 @@ import { signOutUser } from '../../utils/firebase/firebase.utils';
 
 import './navigation.styles.scss'
 
-const Navigation = () => {
+const Navigation: FC = () => {
   
   const currentUser = useSelector(selectCurrentUser)
   const userData = useSelector(selectUserData)

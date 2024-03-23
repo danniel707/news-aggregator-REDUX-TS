@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { FC, useState, useEffect } from 'react';
 
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '../../store/user/user.selector'
-
+import { Post as PostType } from '../../store/posts/posts.types';
 import { fetchIfPostLiked, sumLike, getPostLikesQuantity } from '../../utils/firebase/firebase.utils';
 
 import './like-button.styles.scss'
@@ -11,11 +11,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import classNames from 'classnames';
 
-const LikeButton = ({ post }) => {
+
+const LikeButton: FC<{post: PostType}>  = ({ post }) => {
   
   const currentUser = useSelector(selectCurrentUser) 
-  const [liked, setLiked] = useState(false);
-  const [likesQuantity, setLikesQuantity] = useState(null);
+  const [liked, setLiked] = useState<boolean>(false);
+  const [likesQuantity, setLikesQuantity] = useState<number | null>(null);
      
   //Call the function once when the component mounts.
   //Avoid creating a new function every time the component renders
@@ -38,31 +39,36 @@ const LikeButton = ({ post }) => {
   }, [currentUser, post]);  
    
   const handleLike = async () => {
-    try {
+  try {
       if (!currentUser) {
-        alert('Please log in to give a like.'); // Display a message if user is not logged in
+        alert('Please log in to give a like.');
         return;
       }
+
+      // Optimistic UI Update: Update the UI immediately
+      let newLikesQuantity = likesQuantity || 0;
+      if (!liked) {
+        newLikesQuantity += 1;
+      } else {
+        newLikesQuantity -= 1;
+      }
+      setLiked(!liked);
+      setLikesQuantity(newLikesQuantity);
+
+      // Send the like/unlike request to the server
       const fields = { postId: post.id, userId: currentUser.uid };
-      let quantity = await getPostLikesQuantity(post.id)
-     
-      if (!liked) {        
-        // Like the post     
-        quantity += 1;
-        setLiked(true);     
-      } else {        
-        // Unlike the post
-        quantity -= 1;
-        setLiked(false);      
-      } 
-      
-      sumLike(liked, fields) //Update the post likes count in the db
-      setLikesQuantity(quantity);
-      } catch (error) {
-        console.error('Error liking post:', error);
-        alert('An error occurred. Please try again later.'); // Error message
-      }     
+      await sumLike(liked, fields); // Assuming this function returns a Promise
+
+    } catch (error) {
+      console.error('Error liking post:', error);
+      alert('An error occurred. Please try again later.');
+
+      // Revert the UI changes in case of an error
+      setLiked(liked);
+      setLikesQuantity(likesQuantity);
+    }
   };
+
 
   return (
     <div className="like-container">

@@ -1,8 +1,9 @@
-import React, { useState  } from 'react';
+import { useState, FC, ChangeEvent, FormEvent  } from 'react';
 
 import Button from './button/button.component'
 
 import { updatePost } from '../store/posts/posts.action';
+import { Post as PostType } from '../store/posts/posts.types';
 
 import FormInput from './form-input/form-input.component'
 import { useDispatch } from 'react-redux'
@@ -10,19 +11,23 @@ import { useDispatch } from 'react-redux'
 import { editPostDocument
 } from '../utils/firebase/firebase.utils'
 
+type EditPostModalProps = {
+  post: PostType;
+  onPostEdit: () => void;
+} 
 
-const EditPostModal = ({ post, onPostEdit }) => {
+const EditPostModal: FC<EditPostModalProps> = ({ post, onPostEdit }) => {
   
-  const [formFields, setFormFields] = useState(post);
+  const [formFields, setFormFields] = useState<PostType>(post);
   
   const dispatch = useDispatch();  
   
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {               
        const updatedPost = await editPostDocument(formFields);       
-       dispatch(updatePost(post.id, updatedPost));
+       dispatch(updatePost(post.id, updatedPost!));
        onPostEdit()
       
     } catch (error){
@@ -30,7 +35,7 @@ const EditPostModal = ({ post, onPostEdit }) => {
     }
   }
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const {name, value} = event.target;
 
     setFormFields({...formFields, [name]: value})
